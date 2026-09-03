@@ -1,7 +1,16 @@
 import { useSyncExternalStore } from 'react';
 import type { Editor } from '../engine/editor';
 
-export function StatusBar({ editor }: { editor: Editor }) {
+export type SaveStatus = 'loading' | 'saving' | 'saved' | 'error';
+
+const SAVE_LABEL: Record<SaveStatus, string> = {
+  loading: 'Loading…',
+  saving: 'Saving…',
+  saved: 'Saved locally',
+  error: 'Storage error — work may not be saved',
+};
+
+export function StatusBar({ editor, saveStatus }: { editor: Editor; saveStatus: SaveStatus }) {
   useSyncExternalStore(editor.subscribe, () => editor.version);
 
   const zoomBy = (factor: number) => {
@@ -35,6 +44,10 @@ export function StatusBar({ editor }: { editor: Editor }) {
       )}
       <span className="status-sep">·</span>
       <span>{editor.elements.size} objects</span>
+      <span className="status-sep">·</span>
+      <span className={saveStatus === 'error' ? 'status-error' : undefined} title="Board is autosaved to this browser's local storage">
+        {SAVE_LABEL[saveStatus]}
+      </span>
     </div>
   );
 }

@@ -133,6 +133,27 @@ export class Editor {
     this.emit();
   }
 
+  // ---- persistence ----
+
+  toSnapshot() {
+    return {
+      elements: [...this.elements.values()],
+      order: [...this.order],
+      camera: { x: this.camera.x, y: this.camera.y, zoom: this.camera.zoom },
+    };
+  }
+
+  loadSnapshot(snapshot: { elements: Element[]; order: string[]; camera: { x: number; y: number; zoom: number } }) {
+    this.elements = new Map(snapshot.elements.map((el) => [el.id, el]));
+    this.order = snapshot.order.filter((id) => this.elements.has(id));
+    this.camera.x = snapshot.camera.x;
+    this.camera.y = snapshot.camera.y;
+    this.camera.zoom = snapshot.camera.zoom;
+    this.selection.clear();
+    this.history.clear();
+    this.emit();
+  }
+
   // ---- tool / settings ----
 
   setTool(tool: ToolId) {

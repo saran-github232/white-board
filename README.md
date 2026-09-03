@@ -108,15 +108,15 @@ Cross-checked against the master spec on 2026-09-03. Legend: ✅ implemented · 
 ### Persistence
 | # | Feature | Status | Notes |
 |---|---|---|---|
-| 45–46 | Project file format + import | ❌ | Not implemented — nothing is saved to disk. |
+| 45–46 | Project file format + import | ❌ | Not implemented — no exportable/importable file on disk yet, only the internal autosave. |
 | 47 | Excalidraw compatibility layer | ❌ | Not implemented. |
-| 48 | Autosave (IndexedDB) | ❌ | **Not implemented — a reload currently loses the board.** Highest-priority gap. |
-| 49–50 | Multiple boards + thumbnails | ❌ | Not implemented (single implicit board only). |
+| 48 | Autosave (IndexedDB) | ✅ | Debounced (800ms) autosave to IndexedDB on every editor change; loads on startup. Status bar shows Loading…/Saving…/Saved locally/Storage error. |
+| 49–50 | Multiple boards + thumbnails | ❌ | Not implemented — autosave currently covers a single implicit board (fixed record id). |
 | 51 | Multiple pages | ❌ | Not implemented. |
-| 81 | IndexedDB storage architecture | ❌ | Not implemented. |
-| 82 | Storage quota handling | ❌ | Not implemented. |
-| 83 | Crash recovery | ❌ | Not implemented. |
-| 84–85 | File validation / SVG sanitization | ❌ | N/A yet — no import path exists. |
+| 81 | IndexedDB storage architecture | 🟡 | Uses IndexedDB (not localStorage) with a `schemaVersion` field for future migrations, but everything lives in one object store/record — no split for pages/assets/thumbnails/settings/libraries since those don't exist yet. |
+| 82 | Storage quota handling | 🟡 | Save failures (quota exceeded, IndexedDB blocked) are caught and surfaced as a visible "Storage error" status — never silently dropped. No proactive "almost full" warning before it happens. |
+| 83 | Crash recovery | 🟡 | The autosave snapshot itself serves as the recovery point (worst case: lose the last &lt;800ms of edits). `loadBoard()` validates shape before trusting stored data and returns `null` (fresh board) instead of throwing on corrupt/unreadable data. |
+| 84–85 | File validation / SVG sanitization | ❌ | N/A yet — no user-facing import path exists (only the internal autosave format). |
 
 ### Export / output
 | # | Feature | Status | Notes |
@@ -166,9 +166,9 @@ Cross-checked against the master spec on 2026-09-03. Legend: ✅ implemented · 
 ### Offline / PWA
 | # | Feature | Status | Notes |
 |---|---|---|---|
-| 79 | Offline PWA (manifest, service worker, install prompt) | ❌ | Not implemented — app requires a live dev/build server today. |
-| 80, 116 | Offline acceptance test | ❌ | Blocked by §79/§48 — nothing persists yet, so there's no "offline" story beyond the current tab session. |
-| 107 | "Stored locally" messaging | 🟡 | True by construction (no backend calls anywhere) but nothing is actually stored yet, and there's no explicit UI message. |
+| 79 | Offline PWA (manifest, service worker, install prompt) | ❌ | Not implemented — the app itself needs no network once loaded, but there's no manifest/service worker/install prompt yet, so a fresh load still requires a live dev/build server. |
+| 80, 116 | Offline acceptance test | 🟡 | The board now survives reload/close (IndexedDB autosave). Not yet a full PWA — hasn't been tested with the network actually disabled per the spec's exact test steps, and won't survive until §79 (service worker + cached shell) lands. |
+| 107 | "Stored locally" messaging | ✅ | Status bar shows "Saved locally" / "Saving…" / "Storage error"; no backend calls exist anywhere in the app. |
 | 108 | No external runtime dependencies | ✅ | No CDN/Google Fonts/analytics references; `roughjs` + `perfect-freehand` + React are bundled by Vite. |
 | 109 | Collaboration stays optional | ✅ | Trivially true — no collaboration code exists. |
 
@@ -177,6 +177,6 @@ Not features to check off — process rules (preserve existing functionality, do
 
 ## Biggest gaps, in the spec's own priority order
 
-The spec's "FINAL PRIORITY" list ranks: drawing engine → pointer accuracy → handwriting quality → infinite canvas → selection/editing → shapes → arrows/binding → text → images → **undo/redo → local persistence** → import/export → libraries → pages/frames → presentation → advanced tools → UI polish.
+The spec's "FINAL PRIORITY" list ranks: drawing engine → pointer accuracy → handwriting quality → infinite canvas → selection/editing → shapes → arrows/binding → text → images → undo/redo → **local persistence** → import/export → libraries → pages/frames → presentation → advanced tools → UI polish.
 
-Everything through "undo/redo" is done. The largest gap right now is **local persistence (§48, §81)** — the app has no autosave, so a page reload loses the entire board. That's the natural next milestone, followed by images (§20–21) and export (§41–44).
+Everything through local persistence (§48) is now done — the board autosaves to IndexedDB and survives a reload. Next up per the spec's ordering: **images (§20–21)**, then **export (§41–44)**.

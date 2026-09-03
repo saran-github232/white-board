@@ -139,6 +139,11 @@
   padding: 0;
 }
 
+.status-error {
+  color: #e03131;
+  font-weight: 600;
+}
+
 .text-edit-overlay {
   position: absolute;
   z-index: 20;

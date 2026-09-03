@@ -42,4 +42,11 @@ export class History {
   get canRedo() {
     return this.redoStack.length > 0;
   }
+
+  /** Drop all undo/redo entries — used after loading a snapshot, since old commands reference stale element objects. */
+  clear() {
+    this.undoStack = [];
+    this.redoStack = [];
+    this.onChange();
+  }
 }
